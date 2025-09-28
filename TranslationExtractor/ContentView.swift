@@ -7,62 +7,7 @@
 
 import SwiftUI
 import SwiftData
-
-//struct ContentView: View {
-//    @Environment(\.modelContext) private var modelContext
-//    @Query private var items: [Item]
-//
-//    var body: some View {
-//        NavigationSplitView {
-//            List {
-//                ForEach(items) { item in
-//                    NavigationLink {
-//                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-//                    } label: {
-//                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-//                    }
-//                }
-//                .onDelete(perform: deleteItems)
-//            }
-//#if os(macOS)
-//            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-//#endif
-//            .toolbar {
-//#if os(iOS)
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    EditButton()
-//                }
-//#endif
-//                ToolbarItem {
-//                    Button(action: addItem) {
-//                        Label("Add Item", systemImage: "plus")
-//                    }
-//                }
-//            }
-//        } detail: {
-//            Text("Select an item")
-//        }
-//    }
-//
-//    private func addItem() {
-//        withAnimation {
-//            let newItem = Item(timestamp: Date())
-//            modelContext.insert(newItem)
-//        }
-//    }
-//
-//    private func deleteItems(offsets: IndexSet) {
-//        withAnimation {
-//            for index in offsets {
-//                modelContext.delete(items[index])
-//            }
-//        }
-//    }
-//}
-
-import SwiftUI
 import Foundation
-//import UIKit // remove if targeting macOS
 
 // MARK: - Models
 struct WikipediaAPIResponse: Codable {
@@ -245,7 +190,9 @@ struct ContentView: View {
             do {
                 let dict = try await fetchWikipediaTranslations(for: pageTitle)
                 // Serialize to pretty-printed JSON sorted by key for copy-paste
-                let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys])
+                let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [
+//                    .prettyPrinted,
+                        .sortedKeys])
                 if let s = String(data: jsonData, encoding: .utf8) {
                     jsonOutput = s
                 } else {
@@ -262,7 +209,6 @@ struct ContentView: View {
     
     private func copyToClipboard() {
         guard !jsonOutput.isEmpty else { return }
-//        UIPasteboard.general.string = jsonOutput
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(jsonOutput, forType: .string)
