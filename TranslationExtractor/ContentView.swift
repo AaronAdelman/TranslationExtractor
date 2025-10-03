@@ -111,6 +111,7 @@ func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: 
             }
             // Always include the input English title as "en"
             map["en"] = pageTitle
+            map["simple"] = nil // We don’t want a Simple English translation
             return map
         } catch {
             throw WikiFetchError.decodingError(underlying: error)
