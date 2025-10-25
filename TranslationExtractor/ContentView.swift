@@ -189,7 +189,7 @@ struct ContentView: View {
         
         Task {
             do {
-                let dict = try await fetchWikipediaTranslations(for: pageTitle)
+                let dict = try await fetchWikipediaTranslations(for: pageTitle.preprocessed)
                 // Serialize to pretty-printed JSON sorted by key for copy-paste
                 let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [
 //                    .prettyPrinted,
@@ -213,6 +213,13 @@ struct ContentView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(jsonOutput, forType: .string)
+    }
+}
+
+extension String {
+    var preprocessed: String {
+        
+        return self.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "’", with: "'").replacingOccurrences(of: "‘", with: "'")
     }
 }
 
