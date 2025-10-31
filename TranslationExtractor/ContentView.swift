@@ -112,6 +112,10 @@ func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: 
             // Always include the input English title as "en"
             map["en"] = pageTitle
             map["simple"] = nil // We don’t want a Simple English translation
+            
+            for key in map.keys {
+                map[key] = map[key]?.postprocessed
+            }
             return map
         } catch {
             throw WikiFetchError.decodingError(underlying: error)
@@ -220,6 +224,11 @@ extension String {
     var preprocessed: String {
         
         return self.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "’", with: "'").replacingOccurrences(of: "‘", with: "'")
+    }
+    
+    var postprocessed: String {
+        let result = self.replacingOccurrences(of: "'", with: "’").replacingOccurrences(of: "הבין-לאומי", with: "הבינלאומי")
+        return result
     }
 }
 
