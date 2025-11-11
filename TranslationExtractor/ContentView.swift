@@ -64,8 +64,8 @@ enum WikiFetchError: LocalizedError {
 
 // MARK: - Network function
 /// Fetches translations from Wikipedia API and returns [langCode: title].
-func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: String] {
-    let endpoint = "https://en.wikipedia.org/w/api.php"
+func fetchWikipediaTranslations(for pageTitle: String, languageCode: String) async throws -> [String: String] {
+    let endpoint = "https://\(languageCode).wikipedia.org/w/api.php"
     guard var components = URLComponents(string: endpoint) else {
         throw WikiFetchError.invalidURL
     }
@@ -110,7 +110,7 @@ func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: 
                 }
             }
             // Always include the input English title as "en"
-            map["en"] = pageTitle
+            map[languageCode] = pageTitle
             map["simple"] = nil // We don’t want a Simple English translation
             
             for key in map.keys {
@@ -134,6 +134,7 @@ func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: 
 // MARK: - SwiftUI View
 struct ContentView: View {
     @State private var pageTitle: String = "Earth Hour"
+    @State private var languageCode: String = "en"
     @State private var jsonOutput: String = ""
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -153,6 +154,9 @@ struct ContentView: View {
                         extract()
                     }
                 }
+            
+            TextField("Enter language code (e.g. en)", text: $languageCode)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
             
             HStack {
                 Button(action: extract) {
@@ -201,7 +205,7 @@ struct ContentView: View {
         
         Task {
             do {
-                let dict = try await fetchWikipediaTranslations(for: pageTitle.preprocessed)
+                let dict = try await fetchWikipediaTranslations(for: pageTitle.preprocessed, languageCode: languageCode)
                 // Serialize to pretty-printed JSON sorted by key for copy-paste
                 let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [
 //                    .prettyPrinted,
