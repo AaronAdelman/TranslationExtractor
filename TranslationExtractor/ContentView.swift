@@ -114,7 +114,7 @@ func fetchWikipediaTranslations(for pageTitle: String) async throws -> [String: 
             map["simple"] = nil // We don’t want a Simple English translation
             
             for key in map.keys {
-                map[key] = map[key]?.postprocessed
+                map[key] = map[key]?.postprocessed(key: key)
             }
             return map
         } catch {
@@ -146,6 +146,13 @@ struct ContentView: View {
             
             TextField("Enter page title (e.g. Earth Hour)", text: $pageTitle)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                .submitLabel(.go)
+                .onSubmit {
+                    // Only trigger if not currently loading and input isn't empty
+                    if !isLoading && !pageTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        extract()
+                    }
+                }
             
             HStack {
                 Button(action: extract) {
@@ -159,6 +166,7 @@ struct ContentView: View {
                     }
                 }
                 .disabled(isLoading || pageTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .keyboardShortcut(.return, modifiers: [])
                 
                 Button(action: copyToClipboard) {
                     Text("Copy JSON")
@@ -226,9 +234,16 @@ extension String {
         return self.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "’", with: "'").replacingOccurrences(of: "‘", with: "'")
     }
     
-    var postprocessed: String {
-        let result = self.replacingOccurrences(of: "'", with: "’").replacingOccurrences(of: "הבין-לאומי", with: "הבינלאומי")
-        return result
+    func postprocessed(key: String) -> String {
+        switch key {
+        case "he":
+            let result = self.replacingOccurrences(of: "הבין-לאומי", with: "הבינלאומי").replacingOccurrences(of: "'", with: "׳").replacingOccurrences(of: "\"", with: "״")
+            return result
+
+        default:
+            let result = self.replacingOccurrences(of: "'", with: "’")
+            return result
+        }
     }
 }
 
