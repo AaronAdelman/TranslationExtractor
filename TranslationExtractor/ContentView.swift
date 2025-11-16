@@ -18,10 +18,12 @@ struct ContentView: View {
     @State private var jsonOutput: String = ""
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
+    @State private var source: TranslationSource = .wikipedia
+    @State private var capitalizeTranslations: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Wikipedia Translations")
+            Text("\(source.displayName) Translations")
                 .font(.title2)
                 .bold()
             
@@ -37,6 +39,15 @@ struct ContentView: View {
             
             TextField("Enter language code (e.g. en)", text: $languageCode)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+            
+            Picker("Source", selection: $source) {
+                ForEach(TranslationSource.allCases) { s in
+                    Text(s.displayName).tag(s)
+                }
+            }
+            .pickerStyle(.segmented)
+            
+            Toggle("Capitalize translations", isOn: $capitalizeTranslations)
             
             HStack {
                 Button(action: extract) {
@@ -85,7 +96,7 @@ struct ContentView: View {
         
         Task {
             do {
-                let dict = try await fetchWikipediaTranslations(for: pageTitle.preprocessed, languageCode: languageCode)
+                let dict = try await fetchTranslations(from: source, pageTitle: pageTitle.preprocessed, languageCode: languageCode, capitalize: capitalizeTranslations)
                 // Serialize to pretty-printed JSON sorted by key for copy-paste
                 let jsonData = try JSONSerialization.data(withJSONObject: dict, options: [
 //                    .prettyPrinted,
@@ -118,3 +129,4 @@ struct ContentView: View {
     ContentView()
         .modelContainer(for: Item.self, inMemory: true)
 }
+
