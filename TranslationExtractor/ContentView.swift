@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 import Foundation
-
+import WebKit
 
 
 // MARK: - SwiftUI View
@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @State private var source: TranslationSource = .wikipedia
     @State private var capitalizeTranslations: Bool = false
+    @State private var pageURL: URL? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -34,6 +35,7 @@ struct ContentView: View {
                     // Only trigger if not currently loading and input isn't empty
                     if !isLoading && !pageTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         extract()
+                        pageURL = makePageURL()
                     }
                 }
             
@@ -50,7 +52,10 @@ struct ContentView: View {
             Toggle("Capitalize translations", isOn: $capitalizeTranslations)
             
             HStack {
-                Button(action: extract) {
+                Button(action: {
+                    extract()
+                    pageURL = makePageURL()
+                }) {
                     if isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
@@ -85,6 +90,16 @@ struct ContentView: View {
                 .disabled(true)
             
             Spacer()
+            
+            // Embedded Wikipedia/Wiktionary preview
+            if let url = pageURL {
+                Text("Preview:")
+                    .font(.headline)
+                WebView(url: url)
+                    .frame(minHeight: 380)
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.25)))
+            }
         }
         .padding()
     }
@@ -93,6 +108,7 @@ struct ContentView: View {
         errorMessage = nil
         jsonOutput = ""
         isLoading = true
+        pageURL = makePageURL()
         
         Task {
             do {
@@ -121,8 +137,34 @@ struct ContentView: View {
         pasteboard.clearContents()
         pasteboard.setString(jsonOutput, forType: .string)
     }
+    
+    private func makePageURL() -> URL? {
+        let encodedTitle = pageTitle.preprocessed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        switch source {
+        case .wikipedia:
+            // Example: https://en.wikipedia.org/wiki/Earth_Hour
+            return URL(string: "https://\(languageCode).wikipedia.org/wiki/\(encodedTitle)")
+        case .wiktionary:
+            // Example: https://en.wiktionary.org/wiki/Earth_Hour
+            return URL(string: "https://\(languageCode).wiktionary.org/wiki/\(encodedTitle)")
+        }
+    }
 }
 
+
+struct WebView: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> WKWebView {
+        let webView = WKWebView(frame: .zero)
+        return webView
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) {
+        let request = URLRequest(url: url)
+        nsView.load(request)
+    }
+}
 
 
 #Preview {
