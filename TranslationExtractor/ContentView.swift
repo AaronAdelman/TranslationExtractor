@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var source: TranslationSource = .wikipedia
     @State private var capitalizeTranslations: Bool = false
     @State private var pageURL: URL? = nil
+    @State private var splitAmount: CGFloat = 0.5
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -80,26 +81,28 @@ struct ContentView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Text("Result (JSON):")
-                .font(.headline)
-            
-            TextEditor(text: $jsonOutput)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 220)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.3)))
-                .disabled(true)
-            
-            Spacer()
-            
-            // Embedded Wikipedia/Wiktionary preview
-            if let url = pageURL {
-                Text("Preview:")
-                    .font(.headline)
-                WebView(url: url)
-                    .frame(minHeight: 380)
-                    .cornerRadius(8)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.25)))
+            // Draggable split view between JSON result and web preview
+            VSplitView {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Result (JSON):").font(.headline)
+                    TextEditor(text: $jsonOutput)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 120)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.3)))
+                        .disabled(true)
+                }
+                .frame(minHeight: 120)
+                if let url = pageURL {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Preview:").font(.headline)
+                        WebView(url: url)
+                            .frame(minHeight: 180)
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.25)))
+                    }
+                }
             }
+            .frame(minHeight: 320)
         }
         .padding()
     }
